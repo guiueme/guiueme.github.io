@@ -165,11 +165,11 @@ document.addEventListener('DOMContentLoaded', function() {
   const projects = [
     {
       title: "166studio",
-      description: "Criei um site inovador para um estúdio composto por um animador e um ilustrador, inspirado na arquitetura portuguesa. O design do site simula um prédio, destacando-se pelo uso de azulejos típicos de Portugal, que conferem um toque autêntico e cultural.",
+      description: "I created an innovative website for a studio composed of an animator and an illustrator, inspired by Portuguese architecture. The website design simulates a building, standing out through the use of traditional Portuguese tiles, which add an authentic and cultural touch.",
       images: [
         "./imagens/Screenshot 2024-07-03 at 13.41.51.png"
       ],
-      tags: ["Web Design", "UI/UX", "Desenvolvimento"],
+      tags: ["Web Design", "UI/UX", "Development"],
       links: [
         { text: "Website", url: "https://166studio.com/" }
       ]
@@ -194,11 +194,30 @@ document.addEventListener('DOMContentLoaded', function() {
       images: [
         "./imagens/Imprimir cartaz-01.jpg"
       ],
+      video: [
+        "./imagens/Animação_RubixCube_GuilhermeAlves3210202.mov"
+      ],
       tags: ["Augmented Reality", "Motion Graphics"],
       links: [
         
       ]
-    }
+    },
+    {
+      title: "Predictorfy's ReDesign",
+      description: "Predictorfy is a platform that predicts football team lineups. I was in charge of a full website redesign, focusing on making it more intuitive, visually appealing, and easier to use.The new look comes in both light and dark mode, so users can choose what works best for them. I restructured the main pages to highlight predictions, team comparisons, and key stats. All laid out in a clean, accessible way. The end result is a more modern, functional site that balances a tech-savvy vibe with the energy of the football world.",
+
+
+      images: [
+        "./imagens/Screenshot 2025-04-11 at 12.16.34.png",
+        "./imagens/Screenshot 2025-04-11 at 12.17.08.png",
+        
+      ],
+      tags: ["Web Design", "ReDesign", "Development"],
+      links: [
+        { text: "Website", url: "https://predictorfy.com/" }
+        
+      ]
+    },
   ];
   
   function setupProjectSystem() {
@@ -333,6 +352,8 @@ document.addEventListener('DOMContentLoaded', function() {
       img.className = i === 0 ? 'active' : '';
       galleryContainer.appendChild(img);
     });
+
+    
     
     // Preencher os pontos da galeria
     dotsContainer.innerHTML = '';
