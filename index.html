@@ -5,6 +5,8 @@
   <meta charset="UTF-8">
   <title>Gui's Portfolio</title>
   <link rel="stylesheet" href="./style.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 </head>
 
 <body>
@@ -12,18 +14,37 @@
   <div class="noise"></div>
   <div class="cursor"></div>
   <div class="container">
-    <section data-bgcolor="#2C3E50" data-textcolor="#ffffff">
-      <div class="title">
-        <h1>hi there, I'm <a href="#aboutme" id="nameLink">GUI<span id="additionalLetters"></span></a></h1><br><br>
-        <h1 style="padding-left: 25vw;">welcome to my <a href="#projects" id="nameLink">portfolio</a></h1>
-      </div>
-    </section>
-    
+    <section data-bgcolor="#2C3E50" data-textcolor="#ffffff" class="hero-section">
+        <div class="title">
+          <h1 class="hero-title">hi there, I'm
+            <a href="#aboutme" id="nameLink">GUI<span id="additionalLetters"></span></a>
+          </h1>
+      
+          <h1 class="hero-subtitle">welcome to my
+            <a href="#projects" id="portfolioLink">portfolio</a>
+          </h1>
+        </div>
+      </section>
+      
     <section id="aboutme" data-bgcolor="#4A569D" data-textcolor="#ffffff">
-      <h1>About Me</h1>
-      <h3>If you didn't catch it, my name is Guilherme. I graduated in Graphic Design and Multimedia from ESAD.cr (Escola Superior de Artes e Design, Caldas da Rainha, Portugal). I started in multimedia, and during my time at university, I studied many tools for various purposes. However, what excites me the most is creating websites, and sometimes apps, when I feel inspired. I just finished my course, but I feel it's not enough. I want to create more, learn more, and explore more. I hope we meet in the future :)!
-      </h3>
-      <img src="./imagens/moldura-cor.png" width="35%">
+      <div class="aboutme-inner">
+        <div class="aboutme-panel">
+          <h1 class="aboutme-title">About Me</h1>
+          <div class="aboutme-layout">
+            <div class="aboutme-text aboutme-text--lead">
+              <p>If you didn't catch it, my name is Guilherme. I graduated in Graphic Design and Multimedia from ESAD.cr (Escola Superior de Artes e Design, Caldas da Rainha, Portugal). I started in multimedia, and during my time at university, I studied many tools for various purposes. However, what excites me the most is creating websites, and sometimes apps, when I feel inspired.</p>
+            </div>
+            <div class="aboutme-photo">
+              <div class="aboutme-frame">
+                <img src="./imagens/gui-bw.png" alt="Portrait of Guilherme">
+              </div>
+            </div>
+            <div class="aboutme-text aboutme-text--tail">
+              <p>I just finished my course, but I feel it's not enough. I want to create more, learn more, and explore more. I hope we meet in the future :)!</p>
+            </div>
+          </div>
+        </div>
+      </div>
     </section>
     
     <section id="projects" data-bgcolor="#7E5686" data-textcolor="#ffffff">
@@ -31,23 +52,44 @@
         <div class="image-column">
           <div class="image-list">
             <img src="./imagens/Screenshot 2024-07-03 at 13.41.51.png" alt="Projeto 1">
-            <img src="./imagens/cartaz.jpg" alt="Projeto 2">
-            <img src="./imagens/Imprimir cartaz-01.jpg" alt="Projeto 3">
+            <img src="./imagens/cartaz 2.jpg" alt="Projeto 2">
+            <img src="./imagens/Imprimir cartaz-01 2.jpg" alt="Projeto 3">
             <img src="./imagens/Screenshot 2025-04-11 at 12.16.34.png" alt="Projeto 4">
           </div>
         </div>
         <div class="title-column">
           <h1>Projects</h1>
           <div class="title-list">
-            <h3 data-index="0" data-project="project1"><a href="#" class="project-link">166studio</a>
-              <span class="project-type">Website</span></h3>
-            <h3 data-index="1" data-project="project2"><a href="#" class="project-link">Olha, Vê, Repara</a>
-              <span class="project-type">Event Design</span></h3>
-            <h3 data-index="2" data-project="project3"><a href="#" class="project-link">Rubik's Cube</a>
-              <span class="project-type">Augmented Reality</span></h3>
-              <h3 data-index="3" data-project="project4"><a href="#" class="project-link">Predictorfy</a>
-                <span class="project-type">Website ReDesign</span></h3>
+            <h3 data-index="0" data-project="project1">
+              <div class="project-card-media">
+                <img src="./imagens/Screenshot 2024-07-03 at 13.41.51.png" alt="166studio preview">
+              </div>
+              <a href="#" class="project-link">166studio</a>
+              <span class="project-type">Website</span>
+            </h3>
+            <h3 data-index="1" data-project="project2">
+              <div class="project-card-media">
+                <img src="./imagens/cartaz.jpg" alt="Olha, Vê, Repara preview">
+              </div>
+              <a href="#" class="project-link">Olha, Vê, Repara</a>
+              <span class="project-type">Event Design</span>
+            </h3>
+            <h3 data-index="2" data-project="project3">
+              <div class="project-card-media">
+                <img src="./imagens/Imprimir cartaz-01.jpg" alt="Rubik's Cube preview">
+              </div>
+              <a href="#" class="project-link">Rubik's Cube</a>
+              <span class="project-type">Augmented Reality</span>
+            </h3>
+              <h3 data-index="3" data-project="project4">
+                <div class="project-card-media">
+                  <img src="./imagens/Screenshot 2025-04-11 at 12.16.34.png" alt="Predictorfy preview">
+                </div>
+                <a href="#" class="project-link">Predictorfy</a>
+                <span class="project-type">Website ReDesign</span>
+              </h3>
           </div>
+          <div class="projects-scroll-hint">→ swipe</div>
         </div>
       </div>
     
@@ -84,13 +126,15 @@
             </div>
             
             <div class="popup-info">
-              <h2 id="popup-title"></h2>
-              <div class="popup-tags" id="popup-tags">
-                <!-- As tags serão inseridas aqui via JavaScript -->
-              </div>
-              <div class="popup-description" id="popup-description"></div>
-              <div class="popup-links" id="popup-links">
-                <!-- Os links serão inseridos aqui via JavaScript -->
+              <div class="popup-info-inner">
+                <h2 id="popup-title"></h2>
+                <div class="popup-tags" id="popup-tags">
+                  <!-- As tags serão inseridas aqui via JavaScript -->
+                </div>
+                <div class="popup-description" id="popup-description"></div>
+                <div class="popup-links" id="popup-links">
+                  <!-- Os links serão inseridas aqui via JavaScript -->
+                </div>
               </div>
             </div>
           </div>
@@ -99,10 +143,10 @@
     </section>
     
     <section id="contacts" data-bgcolor="#DC2430" data-textcolor="#ffffff">
-      <h1>Contacts</h1>
+      <h1 style="padding-top: 10vh;">Contacts</h1>
       <h2 style="padding-top: 2vh;">Want to work together on a Project?</h2>
-      <h2 style="padding-top: 2vh;"><a href="#" id="copyEmailBtn" data-email="guiabc777@gmail.com">Get in touch with me by email</a></h2>
-      <div id="copyMessage" class="copy-message">Email copiado para o clipboard!</div>
+      <h2 style="padding-top: 10vh;"><a href="#" id="copyEmailBtn" data-email="guiabc777@gmail.com">Get in touch with me by email</a></h2>
+      <div id="copyMessage" class="copy-message">Email copied to clipboard</div>
     </section>
   </div>
   
