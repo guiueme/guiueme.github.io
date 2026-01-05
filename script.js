@@ -253,7 +253,7 @@ document.addEventListener('DOMContentLoaded', function() {
         ],
         tags: ["Web Design", "UI/UX", "Development"],
         links: [
-          { text: "Website", url: "https://166studio.com/" }
+          { text: "Website", url: "https://166studio.netlify.app/" }
         ]
       },
       {
