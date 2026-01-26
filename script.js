@@ -101,6 +101,17 @@ document.addEventListener('DOMContentLoaded', function() {
       const cursor = document.querySelector('.cursor');
       if (!cursor) return;
       
+      // Detectar se o dispositivo suporta hover (não é touch)
+      const supportsHover = typeof window.matchMedia === 'function'
+        ? window.matchMedia('(hover: hover)').matches
+        : true;
+      
+      // Se não suporta hover (dispositivo touch), esconder o cursor e não inicializar
+      if (!supportsHover) {
+        cursor.style.display = 'none';
+        return;
+      }
+      
       const links = document.querySelectorAll('a');
       const projectTypes = document.querySelectorAll('.project-type');
       
@@ -718,11 +729,3 @@ document.addEventListener('DOMContentLoaded', function() {
     nameLink.firstChild.nodeValue = 'GUIL';
     extra.textContent = 'HERME';
   })();
-  
-  
-  
-  
-  
-  
-  
-  
