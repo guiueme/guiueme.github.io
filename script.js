@@ -1,7 +1,6 @@
 document.addEventListener('DOMContentLoaded', function() {
     // ===== NAVEGAÇÃO E INTERAÇÃO BÁSICA =====
     
-    // Scroll suave ao clicar nos links
     function setupSmoothScroll() {
       document.querySelectorAll('a[href^="#"]').forEach(anchor => {
         anchor.addEventListener('click', function(e) {
@@ -16,7 +15,6 @@ document.addEventListener('DOMContentLoaded', function() {
       });
     }
     
-    // Animação para a palavra "portfolio"
     function setupPortfolioAnimation() {
       const portfolioElement = document.querySelector('h1 a[href="#projects"]');
       
@@ -31,7 +29,6 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     }
     
-    // Animação do nome
     function setupNameAnimation() {
       const nameLink = document.getElementById('nameLink');
       const additionalLetters = document.getElementById('additionalLetters');
@@ -72,7 +69,6 @@ document.addEventListener('DOMContentLoaded', function() {
       nameLink.addEventListener('mouseleave', resetAnimation);
     }
     
-    // Função para copiar email para o clipboard
     function setupEmailCopy() {
       const copyEmailBtn = document.getElementById('copyEmailBtn');
       const copyMessage = document.getElementById('copyMessage');
@@ -95,58 +91,115 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     }
     
-    // ===== CURSOR PERSONALIZADO =====
+    // ===== CURSOR PERSONALIZADO - SEMPRE VISÍVEL NO DESKTOP =====
     
     function setupCustomCursor() {
       const cursor = document.querySelector('.cursor');
       if (!cursor) return;
       
-      // Detectar se o dispositivo suporta hover (não é touch)
+      // Detectar se é dispositivo touch (mobile/tablet)
       const supportsHover = typeof window.matchMedia === 'function'
-        ? window.matchMedia('(hover: hover)').matches
+        ? window.matchMedia('(hover: hover) and (pointer: fine)').matches
         : true;
       
-      // Se não suporta hover (dispositivo touch), esconder o cursor e não inicializar
       if (!supportsHover) {
+        // É mobile/touch - esconder cursor completamente
         cursor.style.display = 'none';
+        document.body.style.cursor = 'auto';
         return;
       }
       
-      const links = document.querySelectorAll('a');
-      const projectTypes = document.querySelectorAll('.project-type');
+      // É desktop - configurar cursor personalizado
+      let cursorX = 0;
+      let cursorY = 0;
       
-      function onMouseMove(e) {
-        const rect = cursor.getBoundingClientRect();
-        const cursorX = e.clientX - rect.width / 2;
-        const cursorY = e.clientY - rect.height / 2;
+      // CHROME FIX: Forçar esconder cursor do sistema no Chrome
+      const isChrome = /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor);
+      
+      if (isChrome) {
+        // Injetar CSS inline para Chrome (mais forte que external CSS)
+        const chromeStyle = document.createElement('style');
+        chromeStyle.id = 'chrome-cursor-fix';
+        chromeStyle.textContent = `
+          *, *::before, *::after {
+            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="1" height="1"><rect width="1" height="1" fill="transparent"/></svg>') 0 0, none !important;
+          }
+        `;
+        document.head.appendChild(chromeStyle);
         
-        if (e.target.closest('section')) {
-          cursor.style.display = 'block';
-          cursor.style.top = cursorY + 'px';
-          cursor.style.left = cursorX + 'px';
-        } else {
-          cursor.style.display = 'none';
-        }
+        // Também forçar via JavaScript
+        setInterval(() => {
+          document.documentElement.style.cursor = 'none';
+          document.body.style.cursor = 'none';
+        }, 100);
       }
       
-      function onMouseEnterLink() {
-        cursor.classList.add('hovered');
+      // Função para garantir que cursor está visível
+      function ensureCursorVisible() {
+        cursor.style.display = 'block';
+        cursor.style.opacity = '1';
+        cursor.style.visibility = 'visible';
       }
       
-      function onMouseLeaveLink() {
-        cursor.classList.remove('hovered');
-      }
-      
-      document.body.addEventListener('mousemove', onMouseMove);
-      
-      links.forEach(link => {
-        link.addEventListener('mouseenter', onMouseEnterLink);
-        link.addEventListener('mouseleave', onMouseLeaveLink);
+      // Mouse move - atualiza posição E garante visibilidade
+      document.addEventListener('mousemove', (e) => {
+        cursorX = e.clientX - 20;
+        cursorY = e.clientY - 20;
+        cursor.style.left = cursorX + 'px';
+        cursor.style.top = cursorY + 'px';
+        ensureCursorVisible();
       });
       
-      projectTypes.forEach(type => {
-        type.addEventListener('mouseenter', onMouseEnterLink);
-        type.addEventListener('mouseleave', onMouseLeaveLink);
+      // Garantir visibilidade em vários eventos
+      document.addEventListener('mouseenter', ensureCursorVisible);
+      document.addEventListener('mouseover', ensureCursorVisible);
+      document.addEventListener('click', ensureCursorVisible);
+      
+      // Verificar periodicamente se cursor está visível (fallback)
+      setInterval(ensureCursorVisible, 100);
+      
+      // Aumentar em elementos interativos
+      function addHoverEffects(elements) {
+        elements.forEach(link => {
+          if (!link) return;
+          link.addEventListener('mouseenter', () => {
+            cursor.classList.add('hovered');
+            ensureCursorVisible();
+          });
+          link.addEventListener('mouseleave', () => {
+            cursor.classList.remove('hovered');
+            ensureCursorVisible();
+          });
+        });
+      }
+      
+      const links = document.querySelectorAll('a, button, .media-item');
+      addHoverEffects(links);
+      
+      // Adicionar também aos project types
+      const projectTypes = document.querySelectorAll('.project-type');
+      addHoverEffects(projectTypes);
+      
+      // Função para adicionar hover a novos elementos (lightbox, etc)
+      window.addCursorHoverEffect = function(selector) {
+        const elements = document.querySelectorAll(selector);
+        addHoverEffects(elements);
+      };
+      
+      // Observer para elementos que aparecem dinamicamente
+      const observer = new MutationObserver(() => {
+        ensureCursorVisible();
+        // Re-adicionar hover effects a novos elementos
+        const newLinks = document.querySelectorAll('a:not([data-cursor-setup]), button:not([data-cursor-setup])');
+        newLinks.forEach(el => {
+          el.setAttribute('data-cursor-setup', 'true');
+        });
+        addHoverEffects(newLinks);
+      });
+      
+      observer.observe(document.body, {
+        childList: true,
+        subtree: true
       });
     }
     
@@ -252,72 +305,66 @@ document.addEventListener('DOMContentLoaded', function() {
       );
     }
     
-    // ===== SISTEMA DE PROJETOS E POPUP =====
+    // ===== SISTEMA DE PROJETOS - GRID MODERNO =====
     
-    // Definição dos projetos
     const projects = [
       {
         title: "166studio",
         description: "I created an innovative website for a studio composed of an animator and an illustrator, inspired by Portuguese architecture. The website design simulates a building, standing out through the use of traditional Portuguese tiles, which add an authentic and cultural touch.",
         images: [
-          "./imagens/Screenshot 2024-07-03 at 13.41.51.png"
+          "./imagens/166.jpg",
+          "./imagens/1661.png",
+          "./imagens/1662.png"
         ],
         tags: ["Web Design", "UI/UX", "Development"],
         links: [
-          { text: "Website", url: "https://166studio.netlify.app/" }
+          { text: "Visit Website", url: "https://166studio.netlify.app/" }
         ]
       },
       {
-        title: "Olha, Vê, Repara (Look, See, Notice)",
-        description: "Olha, Vê, Repara is a conceptual design project created for a university course. It simulates a multi-day interactive art event where visitors uncover hidden messages in artworks. The project includes branding, visual identity, and the design of a visitor kit. Inspired by José Saramago's quote, If you can look, see. If you can see, notice, the design encourages deep observation and discovery.",
+        title: "Spald App",
+        description: "A self-initiated redesign of a local gym app. I replaced an outdated interface with a modern, high-contrast dark design. The project includes a streamlined class booking system, a personalized health dashboard to monitor physical evaluations, and integrated QR codes for quick access. Created in Figma with a focus on usability and clean visual hierarchy.",
         images: [
-          "./imagens/mockup-cartaz.jpg",
-          "./imagens/mockup-saco.jpg",
-          "./imagens/mockup-notebook.jpg"
+          "./imagens/app2.jpg",
+          "./imagens/appleft.png",
+          "./imagens/appmeio.png",
+          "./imagens/appright.png"
         ],
-        tags: ["Graphic design", "Event design", "Branding"],
-        links: [
-          
-          
-        ]
+        tags: ["UI/UX Design", "App", "Figma"],
+        links: []
       },
       {
-        title: "Rubik's Cube",
-        description: "This project demonstrates the use of augmented reality (AR) technology applied to a poster design featuring a Rubik's Cube. By scanning a QR code and pointing at the poster, viewers activate an animation with the message, In every problem, there is a solution. This project combines graphic design and AR to create an engaging interactive experience, encouraging viewers to reflect on problem-solving in a creative way.",
+        title: "Boavista FC",
+        description: "I decided to redesign this page to fix some layout errors and make it look more modern. My main goal was to make the information clearer and easier to read. I focused on improving the membership cards and the pricing tables, creating a cleaner experience that fits the club's identity.",
         images: [
-          "./imagens/Imprimir cartaz-01.jpg"
+          "./imagens/boavista.jpg",
+          "./imagens/boavistanovo.jpg",
+          "./imagens/boavistaantigo.jpg"
         ],
-        video: [
-          "./imagens/Animação_RubixCube_GuilhermeAlves3210202.mp4"
-        ],
-        tags: ["Augmented Reality", "Motion Graphics"],
-        links: [
+  
           
-        ]
+        
+        tags: ["Redesign", "UI/UX Design", "Figma"],
+        links: []
       },
       {
         title: "Predictorfy's ReDesign",
-        description: "Predictorfy is a platform that predicts football team lineups. I was in charge of a full website redesign, focusing on making it more intuitive, visually appealing, and easier to use.The new look comes in both light and dark mode, so users can choose what works best for them. I restructured the main pages to highlight predictions, team comparisons, and key stats. All laid out in a clean, accessible way. The end result is a more modern, functional site that balances a tech-savvy vibe with the energy of the football world.",
-  
-  
+        description: "Predictorfy is a platform that predicts football team lineups. I was in charge of a full website redesign, focusing on making it more intuitive, visually appealing, and easier to use. The new look comes in both light and dark mode, so users can choose what works best for them. I restructured the main pages to highlight predictions, team comparisons, and key stats. All laid out in a clean, accessible way. The end result is a more modern, functional site that balances a tech-savvy vibe with the energy of the football world.",
         images: [
-          "./imagens/Screenshot 2025-04-11 at 12.16.34.png",
-          "./imagens/Screenshot 2025-04-11 at 12.17.08.png",
-          
+          "./imagens/predpc.jpg",
+          "./imagens/predmobile.jpg",
+          "./imagens/predpclight.jpg"
         ],
         tags: ["Web Design", "ReDesign", "Development"],
         links: [
-          { text: "Website", url: "https://predictorfy.com/" }
-          
+          { text: "Visit Website", url: "https://predictorfy.com/" }
         ]
       },
     ];
     
     function setupProjectSystem() {
-      // Configurar hover das imagens
       setupProjectImageHover();
       
-      // Configurar eventos de clique para os projetos
       const projectItems = document.querySelectorAll('.title-list h3');
       projectItems.forEach((item, index) => {
         item.addEventListener('click', function(event) {
@@ -326,46 +373,38 @@ document.addEventListener('DOMContentLoaded', function() {
         });
       });
       
-      // Configurar evento para fechar o popup
       const closeButton = document.getElementById('popup-close');
       if (closeButton) {
         closeButton.addEventListener('click', closePopup);
       }
       
-      // Fechar o popup ao clicar fora do conteúdo
       const popupOverlay = document.querySelector('.popup-overlay');
       if (popupOverlay) {
         popupOverlay.addEventListener('click', closePopup);
       }
       
-      // Configurar botões de navegação da galeria
-      const prevButton = document.getElementById('gallery-prev');
-      const nextButton = document.getElementById('gallery-next');
-      
-      if (prevButton && nextButton) {
-        prevButton.addEventListener('click', () => {
-          const slides = document.querySelectorAll('#gallery-container .gallery-slide');
-          const activeSlide = document.querySelector('#gallery-container .gallery-slide.active');
-          if (!activeSlide || slides.length <= 1) return;
-          
-          const currentIndex = Array.from(slides).indexOf(activeSlide);
-          const prevIndex = (currentIndex - 1 + slides.length) % slides.length;
-          showSlide(prevIndex);
-        });
+      // Keyboard navigation
+      document.addEventListener('keydown', (e) => {
+        const popup = document.getElementById('project-popup');
+        const lightbox = document.querySelector('.lightbox');
         
-        nextButton.addEventListener('click', () => {
-          const slides = document.querySelectorAll('#gallery-container .gallery-slide');
-          const activeSlide = document.querySelector('#gallery-container .gallery-slide.active');
-          if (!activeSlide || slides.length <= 1) return;
-          
-          const currentIndex = Array.from(slides).indexOf(activeSlide);
-          const nextIndex = (currentIndex + 1) % slides.length;
-          showSlide(nextIndex);
-        });
-      }
+        if (e.key === 'Escape') {
+          if (lightbox && lightbox.classList.contains('active')) {
+            closeLightbox();
+          } else if (popup && popup.classList.contains('active')) {
+            closePopup();
+          }
+        } else if (lightbox && lightbox.classList.contains('active')) {
+          // Navegação no lightbox
+          if (e.key === 'ArrowLeft') {
+            navigateLightbox(-1);
+          } else if (e.key === 'ArrowRight') {
+            navigateLightbox(1);
+          }
+        }
+      });
     }
     
-    // Função para configurar o hover das imagens
     function setupProjectImageHover() {
       const projectLinks = document.querySelectorAll('.project-link');
       const projectTypes = document.querySelectorAll('.project-type');
@@ -374,7 +413,6 @@ document.addEventListener('DOMContentLoaded', function() {
       
       if (projectImages.length === 0) return;
       
-      // Mostrar a primeira imagem por padrão
       projectImages[0].style.opacity = '1';
       
       function showImage(index) {
@@ -396,7 +434,6 @@ document.addEventListener('DOMContentLoaded', function() {
       });
     }
     
-    // Funções para manipular o popup
     function openPopup(index) {
       if (index < 0 || index >= projects.length) return;
       
@@ -406,17 +443,16 @@ document.addEventListener('DOMContentLoaded', function() {
       const popupDescription = document.getElementById('popup-description');
       const tagsContainer = document.getElementById('popup-tags');
       const linksContainer = document.getElementById('popup-links');
-      const galleryContainer = document.getElementById('gallery-container');
-      const dotsContainer = document.getElementById('gallery-dots');
+      const mediaGrid = document.querySelector('.media-grid');
       
       if (!popup || !popupTitle || !popupDescription || !tagsContainer || 
-          !linksContainer || !galleryContainer || !dotsContainer) return;
+          !linksContainer || !mediaGrid) return;
       
-      // Preencher o conteúdo
+      // Preencher info
       popupTitle.textContent = project.title;
       popupDescription.textContent = project.description;
       
-      // Preencher as tags
+      // Tags
       tagsContainer.innerHTML = '';
       project.tags.forEach(tag => {
         const tagElement = document.createElement('div');
@@ -425,16 +461,31 @@ document.addEventListener('DOMContentLoaded', function() {
         tagsContainer.appendChild(tagElement);
       });
       
-      // Preencher os links
+      // Links
       linksContainer.innerHTML = '';
-      project.links.forEach(link => {
-        const linkElement = document.createElement('a');
-        linkElement.className = 'popup-link';
-        linkElement.href = link.url;
-        linkElement.textContent = link.text;
-        linkElement.target = '_blank';
-        linksContainer.appendChild(linkElement);
-      });
+      if (project.links && project.links.length > 0) {
+        project.links.forEach(link => {
+          const linkElement = document.createElement('a');
+          linkElement.className = 'popup-link';
+          linkElement.href = link.url;
+          linkElement.textContent = link.text;
+          linkElement.target = '_blank';
+          linksContainer.appendChild(linkElement);
+        });
+      }
+      
+      // Renderizar grid de media
+      renderMediaGrid(project);
+      
+      popup.classList.add('active');
+      document.body.style.overflow = 'hidden';
+    }
+    
+    function renderMediaGrid(project) {
+      const mediaGrid = document.querySelector('.media-grid');
+      if (!mediaGrid) return;
+      
+      mediaGrid.innerHTML = '';
       
       const normalizeMedia = value => {
         if (!value && value !== 0) return [];
@@ -443,157 +494,276 @@ document.addEventListener('DOMContentLoaded', function() {
       };
       
       const imageSources = normalizeMedia(project.images);
-      const videoSources = [
-        ...normalizeMedia(project.video),
-        ...normalizeMedia(project.videos)
-      ];
+      const videoSources = normalizeMedia(project.videos);
       
-      const mediaItems = [
+      const allMedia = [
         ...imageSources.map(src => ({ type: 'image', src })),
         ...videoSources.map(src => ({ type: 'video', src }))
       ];
       
-      // Mostrar o popup imediatamente
-      popup.classList.add('active');
+      if (allMedia.length === 0) {
+        const emptyMessage = document.createElement('div');
+        emptyMessage.className = 'media-grid-empty';
+        emptyMessage.textContent = 'No media available for this project.';
+        mediaGrid.appendChild(emptyMessage);
+        return;
+      }
       
-      // Preencher a galeria de forma assíncrona para exibir o popup primeiro
-      galleryContainer.innerHTML = '';
-      const controlsWrapper = document.querySelector('.gallery-controls');
+      // Separar primeira imagem (hero) das restantes
+      const heroMedia = allMedia.length > 0 ? allMedia[0] : null;
+      const regularMedia = allMedia.slice(1);
       
-      const renderGallery = () => {
-        if (mediaItems.length === 0) {
-          const emptyMessage = document.createElement('div');
-          emptyMessage.className = 'gallery-empty';
-          emptyMessage.textContent = 'No media available for this project.';
-          galleryContainer.appendChild(emptyMessage);
-          if (dotsContainer) dotsContainer.style.display = 'none';
-          if (controlsWrapper) controlsWrapper.style.display = 'none';
-          return;
-        }
+      // Sistema de posicionamento - hero + scattered
+      const positions = generateScatteredPositions(regularMedia.length, heroMedia !== null);
+      
+      // Calcular altura necessária do grid
+      const galleryElement = document.querySelector('.popup-gallery');
+      const containerWidth = galleryElement ? (galleryElement.clientWidth - 80) : 800;
+      const calculatedHeroHeight = heroMedia ? (containerWidth * 0.7) / (16/9) + 120 : 0;
+      const regularMaxY = regularMedia.length > 0 
+        ? Math.max(...positions.map(p => p.top + p.height)) 
+        : 0;
+      const maxY = Math.max(calculatedHeroHeight, regularMaxY) + 40;
+      mediaGrid.style.minHeight = maxY + 'px';
+      
+      // Preparar array para lightbox navigation (hero + regular)
+      const lightboxArray = allMedia.map((item, idx) => ({
+        item: item,
+        type: item.type
+      }));
+      
+      // RENDERIZAR HERO IMAGE (primeira imagem)
+      if (heroMedia) {
+        const heroItem = document.createElement('div');
+        // Hero sempre horizontal, mesmo em projetos de app
+        heroItem.className = `media-item media-item--hero ${heroMedia.type === 'video' ? 'is-video' : ''}`.trim();
         
-        const firstProjectImage = imageSources[0] || '';
-        
-        const createSlide = (item, index, isActive = false) => {
-          const slide = document.createElement('div');
-          slide.className = `gallery-slide${isActive ? ' active' : ''}`;
+        if (heroMedia.type === 'video') {
+          const video = document.createElement('video');
+          video.src = heroMedia.src;
+          video.preload = 'metadata';
+          video.controls = false;
+          video.muted = true;
+          video.loop = true;
+          video.playsInline = true;
           
-          if (item.type === 'video') {
-            const videoElement = document.createElement('video');
-            videoElement.controls = true;
-            videoElement.preload = 'none';
-            videoElement.playsInline = true;
-            videoElement.muted = true;
-            videoElement.style.width = '100%';
-            videoElement.style.borderRadius = '10px';
-            videoElement.style.pointerEvents = 'auto';
-            videoElement.style.zIndex = '2';
-            if (firstProjectImage) {
-              videoElement.poster = firstProjectImage;
-            }
-            
-            const source = document.createElement('source');
-            source.src = item.src;
-            source.type = 'video/mp4';
-            videoElement.appendChild(source);
-            videoElement.addEventListener('ended', () => {
-              videoElement.currentTime = 0;
-              const playPromise = videoElement.play();
-              if (playPromise && typeof playPromise.catch === 'function') {
-                playPromise.catch(() => {});
-              }
-            });
-            
-            slide.appendChild(videoElement);
-            
-            if (isActive) {
-              setTimeout(() => {
-                const playPromise = videoElement.play();
-                if (playPromise && typeof playPromise.catch === 'function') {
-                  playPromise.catch(() => {});
-                }
-              }, 0);
-            }
-          } else {
-            const img = document.createElement('img');
-            img.src = item.src;
-            img.alt = `${project.title} - Imagem ${index + 1}`;
-            img.loading = isActive ? 'eager' : 'lazy';
-            slide.appendChild(img);
-          }
-          
-          galleryContainer.appendChild(slide);
-        };
-        
-        // Renderizar rapidamente o primeiro item
-        createSlide(mediaItems[0], 0, true);
-        showSlide(0);
-        
-        // Renderizar o restante sem bloquear o popup
-        const remainingItems = mediaItems.slice(1);
-        if (remainingItems.length) {
-          const appendRemaining = () => {
-            remainingItems.forEach((item, idx) => {
-              setTimeout(() => createSlide(item, idx + 1), 0);
-            });
-          };
-          appendRemaining();
-        }
-        
-        // Preencher os pontos da galeria
-        dotsContainer.innerHTML = '';
-        if (mediaItems.length > 1) {
-          mediaItems.forEach((_, i) => {
-            const dot = document.createElement('div');
-            dot.className = `gallery-dot ${i === 0 ? 'active' : ''}`;
-            dot.onclick = () => showSlide(i);
-            dotsContainer.appendChild(dot);
+          heroItem.addEventListener('mouseenter', () => {
+            video.play().catch(() => {});
+            heroItem.classList.add('wiggling');
+            setTimeout(() => {
+              heroItem.classList.remove('wiggling');
+            }, 1200);
           });
-          if (dotsContainer) {
-            dotsContainer.style.display = '';
-          }
-          if (controlsWrapper) {
-            controlsWrapper.style.display = 'flex';
-          }
-        } else {
-          if (dotsContainer) {
-            dotsContainer.style.display = 'none';
-          }
-          if (controlsWrapper) {
-            controlsWrapper.style.display = 'none';
-          }
-        }
-      };
-      
-      requestAnimationFrame(renderGallery);
-    }
-    
-    function showSlide(index) {
-      const slides = document.querySelectorAll('#gallery-container .gallery-slide');
-      const dots = document.querySelectorAll('.gallery-dot');
-      
-      if (slides.length === 0) return;
-      
-      const normalizedIndex = ((index % slides.length) + slides.length) % slides.length;
-      
-      slides.forEach((slide, i) => {
-        const isActive = i === normalizedIndex;
-        slide.classList.toggle('active', isActive);
-        slide.querySelectorAll('video').forEach(video => {
-          if (isActive) {
-            const playPromise = video.play();
-            if (playPromise && typeof playPromise.catch === 'function') {
-              playPromise.catch(() => {});
-            }
-          } else {
+          
+          heroItem.addEventListener('mouseleave', () => {
             video.pause();
             video.currentTime = 0;
-          }
-        });
-      });
+            heroItem.classList.remove('wiggling');
+          });
+          
+          heroItem.addEventListener('click', () => {
+            openLightbox(heroMedia, 'video', lightboxArray, 0);
+          });
+          
+          heroItem.appendChild(video);
+        } else {
+          const img = document.createElement('img');
+          img.src = heroMedia.src;
+          img.alt = `${project.title} - Hero Image`;
+          img.loading = 'eager';
+          
+          heroItem.addEventListener('mouseenter', () => {
+            heroItem.classList.add('wiggling');
+            setTimeout(() => {
+              heroItem.classList.remove('wiggling');
+            }, 1200);
+          });
+          
+          heroItem.addEventListener('mouseleave', () => {
+            heroItem.classList.remove('wiggling');
+          });
+          
+          heroItem.addEventListener('click', () => {
+            openLightbox(heroMedia, 'image', lightboxArray, 0);
+          });
+          
+          heroItem.appendChild(img);
+        }
+        
+        mediaGrid.appendChild(heroItem);
+      }
       
-      dots.forEach((dot, i) => {
-        dot.className = `gallery-dot ${i === normalizedIndex ? 'active' : ''}`;
+      // RENDERIZAR IMAGENS REGULARES (scattered)
+      regularMedia.forEach((item, index) => {
+        const mediaItem = document.createElement('div');
+        const pos = positions[index];
+        
+        mediaItem.className = `media-item ${item.type === 'video' ? 'is-video' : ''}`;
+        mediaItem.style.left = pos.left + 'px';
+        mediaItem.style.top = pos.top + 'px';
+        mediaItem.style.width = pos.width + 'px';
+        mediaItem.style.height = pos.height + 'px';
+        mediaItem.style.transform = `scale(1) rotate(${pos.rotation}deg)`;
+        mediaItem.style.setProperty('--hover-rotate', `${pos.rotation}deg`);
+        
+        const lightboxIndex = index + 1; // +1 porque hero é index 0
+        
+        if (item.type === 'video') {
+          const video = document.createElement('video');
+          video.src = item.src;
+          video.preload = 'metadata';
+          video.controls = false;
+          video.muted = true;
+          video.loop = true;
+          video.playsInline = true;
+          
+          mediaItem.addEventListener('mouseenter', () => {
+            video.play().catch(() => {});
+            // Add wiggling class immediately on hover
+            mediaItem.classList.add('wiggling');
+            // Remove after animation completes
+            setTimeout(() => {
+              mediaItem.classList.remove('wiggling');
+            }, 1200);
+          });
+          
+          mediaItem.addEventListener('mouseleave', () => {
+            video.pause();
+            video.currentTime = 0;
+            mediaItem.classList.remove('wiggling');
+          });
+          
+          mediaItem.addEventListener('click', () => {
+            openLightbox(item, 'video', lightboxArray, index);
+          });
+          
+          mediaItem.appendChild(video);
+        } else {
+          const img = document.createElement('img');
+          img.src = item.src;
+          img.alt = `${project.title} - Image ${index + 1}`;
+          img.loading = index < 4 ? 'eager' : 'lazy';
+          
+          mediaItem.addEventListener('mouseenter', () => {
+            // Add wiggling class immediately on hover
+            mediaItem.classList.add('wiggling');
+            // Remove after animation completes
+            setTimeout(() => {
+              mediaItem.classList.remove('wiggling');
+            }, 1200);
+          });
+          
+          mediaItem.addEventListener('mouseleave', () => {
+            mediaItem.classList.remove('wiggling');
+          });
+          
+          mediaItem.addEventListener('click', () => {
+            openLightbox(item, 'image', lightboxArray, index);
+          });
+          
+          mediaItem.appendChild(img);
+        }
+        
+        mediaGrid.appendChild(mediaItem);
       });
+    }
+    
+    // Gera posições aleatórias sem sobreposição
+    function generateScatteredPositions(count, hasHero = false) {
+      const positions = [];
+      const baseWidth = 352; // Aumentado 10% (320 * 1.1)
+      const baseHeight = 264; // Aumentado 10% (240 * 1.1)
+      const padding = 30;
+      const maxAttempts = 50;
+      
+      const galleryElement = document.querySelector('.popup-gallery');
+      const containerWidth = galleryElement ? (galleryElement.clientWidth - 80) : 800;
+      const maxRotation = 8;
+      
+      const columns = Math.floor(containerWidth / (baseWidth + padding));
+      const actualColumns = Math.max(2, Math.min(columns, 3));
+      
+      // Se tem hero, calcular offset mínimo baseado na altura do hero
+      // Hero: 70% width com aspect 16:9 → altura ≈ 0.70 × containerWidth / (16/9)
+      // Adicionar margem de segurança generosa
+      const heroHeight = hasHero ? (containerWidth * 0.7) / (16/9) : 0;
+      const heroOffset = hasHero ? Math.max(500, heroHeight + 120) : 0; // Mínimo 500px
+      
+      for (let i = 0; i < count; i++) {
+        let placed = false;
+        let attempts = 0;
+        
+        // Variação aleatória no tamanho (±15%)
+        const sizeVariation = 0.85 + (Math.random() * 0.3); // 0.85 a 1.15
+        const itemWidth = Math.floor(baseWidth * sizeVariation);
+        const itemHeight = Math.floor(baseHeight * sizeVariation);
+        
+        while (!placed && attempts < maxAttempts) {
+          const col = i % actualColumns;
+          const row = Math.floor(i / actualColumns);
+          
+          const baseLeft = col * (baseWidth + padding * 2);
+          const baseTop = heroOffset + row * (baseHeight + padding * 2);
+          
+          const left = baseLeft + (Math.random() * padding * 2 - padding);
+          const top = baseTop + (Math.random() * padding * 2 - padding);
+          const rotation = (Math.random() * maxRotation * 2) - maxRotation;
+          
+          const newPos = { left, top, rotation, width: itemWidth, height: itemHeight };
+          
+          const overlaps = positions.some(pos => {
+            return checkOverlap(
+              { x: pos.left, y: pos.top, width: pos.width, height: pos.height },
+              { x: left, y: top, width: itemWidth, height: itemHeight }
+            );
+          });
+          
+          if (!overlaps || positions.length === 0) {
+            positions.push(newPos);
+            placed = true;
+          }
+          
+          attempts++;
+        }
+        
+        if (!placed) {
+          const col = i % actualColumns;
+          const row = Math.floor(i / actualColumns);
+          positions.push({
+            left: col * (baseWidth + padding * 2),
+            top: row * (baseHeight + padding * 2),
+            rotation: 0,
+            width: itemWidth,
+            height: itemHeight
+          });
+        }
+      }
+      
+      return positions;
+    }
+    
+    // Verifica sobreposição entre dois retângulos
+    function checkOverlap(rect1, rect2) {
+      const padding = 25; // Espaço mínimo entre elementos
+      
+      const r1 = {
+        left: rect1.x - padding,
+        right: rect1.x + rect1.width + padding,
+        top: rect1.y - padding,
+        bottom: rect1.y + rect1.height + padding
+      };
+      
+      const r2 = {
+        left: rect2.x - padding,
+        right: rect2.x + rect2.width + padding,
+        top: rect2.y - padding,
+        bottom: rect2.y + rect2.height + padding
+      };
+      
+      return !(r1.right < r2.left || 
+               r1.left > r2.right || 
+               r1.bottom < r2.top || 
+               r1.top > r2.bottom);
     }
     
     function closePopup() {
@@ -601,12 +771,173 @@ document.addEventListener('DOMContentLoaded', function() {
       if (!popup) return;
       
       popup.classList.remove('active');
+      document.body.style.overflow = '';
       
       const videos = popup.querySelectorAll('video');
       videos.forEach(video => {
         video.pause();
         video.currentTime = 0;
       });
+      
+      closeLightbox();
+    }
+    
+    // ===== LIGHTBOX FULLSCREEN COM NAVEGAÇÃO =====
+    
+    let currentLightboxIndex = 0;
+    let lightboxMediaItems = [];
+    
+    function openLightbox(mediaItem, type, allMedia = null, startIndex = 0) {
+      // Se receber array de media, guardar para navegação
+      if (allMedia && Array.isArray(allMedia)) {
+        lightboxMediaItems = allMedia;
+        currentLightboxIndex = startIndex;
+      } else {
+        // Modo single image
+        lightboxMediaItems = [{ item: mediaItem, type: type }];
+        currentLightboxIndex = 0;
+      }
+      
+      let lightbox = document.querySelector('.lightbox');
+      
+      if (!lightbox) {
+        lightbox = document.createElement('div');
+        lightbox.className = 'lightbox';
+        
+        const content = document.createElement('div');
+        content.className = 'lightbox-content';
+        
+        const closeBtn = document.createElement('div');
+        closeBtn.className = 'lightbox-close';
+        closeBtn.innerHTML = `
+          <svg viewBox="0 0 24 24" width="24" height="24">
+            <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"></path>
+          </svg>
+        `;
+        closeBtn.onclick = closeLightbox;
+        
+        // Navigation arrows
+        const prevBtn = document.createElement('div');
+        prevBtn.className = 'lightbox-nav lightbox-prev';
+        prevBtn.innerHTML = `
+          <svg viewBox="0 0 24 24" width="32" height="32">
+            <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"></path>
+          </svg>
+        `;
+        prevBtn.onclick = (e) => {
+          e.stopPropagation();
+          navigateLightbox(-1);
+        };
+        
+        const nextBtn = document.createElement('div');
+        nextBtn.className = 'lightbox-nav lightbox-next';
+        nextBtn.innerHTML = `
+          <svg viewBox="0 0 24 24" width="32" height="32">
+            <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"></path>
+          </svg>
+        `;
+        nextBtn.onclick = (e) => {
+          e.stopPropagation();
+          navigateLightbox(1);
+        };
+        
+        // Counter
+        const counter = document.createElement('div');
+        counter.className = 'lightbox-counter';
+        
+        lightbox.appendChild(content);
+        lightbox.appendChild(closeBtn);
+        lightbox.appendChild(prevBtn);
+        lightbox.appendChild(nextBtn);
+        lightbox.appendChild(counter);
+        
+        lightbox.onclick = (e) => {
+          if (e.target === lightbox) closeLightbox();
+        };
+        
+        document.body.appendChild(lightbox);
+      }
+      
+      updateLightboxContent();
+      lightbox.classList.add('active');
+      document.body.style.overflow = 'hidden';
+      
+      // Adicionar hover effect ao cursor para elementos do lightbox
+      if (window.addCursorHoverEffect) {
+        setTimeout(() => {
+          window.addCursorHoverEffect('.lightbox-close');
+          window.addCursorHoverEffect('.lightbox-nav');
+        }, 0);
+      }
+    }
+    
+    function updateLightboxContent() {
+      const lightbox = document.querySelector('.lightbox');
+      if (!lightbox) return;
+      
+      const content = lightbox.querySelector('.lightbox-content');
+      const counter = lightbox.querySelector('.lightbox-counter');
+      const prevBtn = lightbox.querySelector('.lightbox-prev');
+      const nextBtn = lightbox.querySelector('.lightbox-next');
+      
+      content.innerHTML = '';
+      
+      const current = lightboxMediaItems[currentLightboxIndex];
+      
+      if (current.type === 'video') {
+        const video = document.createElement('video');
+        video.controls = true;
+        video.autoplay = true;
+        video.playsInline = true;
+        video.src = current.item.src;
+        content.appendChild(video);
+      } else {
+        const img = document.createElement('img');
+        img.src = current.item.src;
+        img.alt = 'Fullscreen image';
+        content.appendChild(img);
+      }
+      
+      // Update counter
+      if (lightboxMediaItems.length > 1) {
+        counter.textContent = `${currentLightboxIndex + 1} / ${lightboxMediaItems.length}`;
+        counter.style.display = 'block';
+        prevBtn.classList.remove('hidden');
+        nextBtn.classList.remove('hidden');
+      } else {
+        counter.style.display = 'none';
+        prevBtn.classList.add('hidden');
+        nextBtn.classList.add('hidden');
+      }
+    }
+    
+    function navigateLightbox(direction) {
+      const newIndex = (currentLightboxIndex + direction + lightboxMediaItems.length) % lightboxMediaItems.length;
+      currentLightboxIndex = newIndex;
+      updateLightboxContent();
+    }
+    
+    function closeLightbox() {
+      const lightbox = document.querySelector('.lightbox');
+      if (lightbox) {
+        lightbox.classList.remove('active');
+        
+        // Só restaurar overflow se o popup também estiver fechado
+        const popup = document.getElementById('project-popup');
+        if (!popup || !popup.classList.contains('active')) {
+          document.body.style.overflow = '';
+        }
+        
+        const videos = lightbox.querySelectorAll('video');
+        videos.forEach(video => {
+          video.pause();
+          video.currentTime = 0;
+        });
+      }
+      
+      // Reset lightbox state
+      lightboxMediaItems = [];
+      currentLightboxIndex = 0;
     }
     
     // ===== ANIMAÇÃO DE PARTÍCULAS =====
@@ -618,7 +949,6 @@ document.addEventListener('DOMContentLoaded', function() {
       const ctx = canvas.getContext('2d');
       if (!ctx) return;
       
-      // Configurar o tamanho do canvas para preencher a tela
       function resizeCanvas() {
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
@@ -627,7 +957,6 @@ document.addEventListener('DOMContentLoaded', function() {
       resizeCanvas();
       window.addEventListener('resize', resizeCanvas);
       
-      // Classe para as partículas
       class Particle {
         constructor() {
           this.x = Math.random() * canvas.width;
@@ -642,13 +971,11 @@ document.addEventListener('DOMContentLoaded', function() {
           this.x += this.speedX;
           this.y += this.speedY;
           
-          // Fazer as partículas voltarem quando saírem da tela
           if (this.x < 0 || this.x > canvas.width) this.speedX *= -1;
           if (this.y < 0 || this.y > canvas.height) this.speedY *= -1;
         }
         
         draw() {
-          // Usar uma cor branca com opacidade variável
           ctx.fillStyle = `rgba(255, 255, 255, ${this.opacity})`;
           ctx.beginPath();
           ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
@@ -656,7 +983,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
       }
       
-      // Criar um array de partículas
       const particles = [];
       const particleCount = 70;
       
@@ -664,7 +990,6 @@ document.addEventListener('DOMContentLoaded', function() {
         particles.push(new Particle());
       }
       
-      // Função de animação
       function animate() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         
@@ -676,13 +1001,11 @@ document.addEventListener('DOMContentLoaded', function() {
         requestAnimationFrame(animate);
       }
       
-      // Iniciar a animação
       animate();
     }
     
     // ===== INICIALIZAÇÃO =====
     
-    // Inicializar todas as funcionalidades
     function init() {
       setupSmoothScroll();
       setupPortfolioAnimation();
@@ -696,19 +1019,18 @@ document.addEventListener('DOMContentLoaded', function() {
       setupProjectSystem();
       setupParticlesAnimation();
       
-      // Adicionar função de teste para abrir o popup diretamente
       window.testOpenPopup = function(index) {
         openPopup(index);
       };
     }
     
-    // Iniciar a aplicação
     init();
     if (typeof ScrollTrigger !== 'undefined') {
       ScrollTrigger.refresh();
     }
   });
   
+  // Mobile name display
   (function(){
     const nameLink = document.getElementById('nameLink');
     const extra = document.getElementById('additionalLetters');
@@ -717,15 +1039,12 @@ document.addEventListener('DOMContentLoaded', function() {
   
     const isTouch = window.matchMedia('(hover: none)').matches;
   
-    // DESKTOP (tem hover): mantém animação que já tens (GUI -> +LHERME no hover)
     if(!isTouch){
-      // garante estado inicial do desktop (GUI)
       nameLink.firstChild.nodeValue = 'GUI';
-      extra.textContent = ''; // letras vão ser escritas no hover pelo teu código atual
+      extra.textContent = '';
       return;
     }
   
-    // MOBILE (sem hover): mostra logo GUILHERME e não anima
     nameLink.firstChild.nodeValue = 'GUIL';
     extra.textContent = 'HERME';
   })();
